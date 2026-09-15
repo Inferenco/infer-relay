@@ -201,13 +201,38 @@ impl Settings {
         let from_file = Self::new_from_default(&default_settings, config_file_name);
         match from_file {
             Err(e) => {
-                // pass up the parse error if the config file was specified,
-                // otherwise use the default config (with a warning).
+                // If the user passed --config <path>, the file is required;
+                // surface the error verbatim. main.rs has already verified
+                // the path exists and is readable, so this branch is
+                // reached only on a real parse failure.
                 if config_file_name.is_some() {
-                    Err(e)
+                    return Err(e);
+                }
+                // No --config flag was passed and the default ./config.toml
+                // could not be loaded. Distinguish "file missing" (the
+                // common, documented case for default deployments — see
+                // docs/docker.md) from real configuration errors so we
+                // don't alarm operators who deliberately run without one.
+                //
+                // NB: the `config` crate returns `ConfigError::Foreign`
+                // wrapping an `io::Error` of kind `NotFound` for a missing
+                // file — `ConfigError::NotFound` is for a missing
+                // *property*, not a missing file, so we must downcast.
+                let file_missing = matches!(
+                    &e,
+                    ConfigError::Foreign(inner)
+                        if inner
+                            .downcast_ref::<std::io::Error>()
+                            .is_some_and(|io_err| io_err.kind() == std::io::ErrorKind::NotFound)
+                );
+                if file_missing {
+                    // silent: the binary defaults are correct here.
+                    Ok(default_settings)
                 } else {
-                    eprintln!("Error reading config file ({:?})", e);
-                    eprintln!("WARNING: Default configuration settings will be used");
+                    eprintln!(
+                        "Warning: could not parse config.toml ({:?}); using built-in defaults.",
+                        e
+                    );
                     Ok(default_settings)
                 }
             }

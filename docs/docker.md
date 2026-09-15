@@ -107,6 +107,42 @@ Tail recent logs:
 $ docker compose logs --tail=200 -f relay
 ```
 
+## First-boot log output
+
+On a fresh `docker compose up -d`, the relay uses its built-in defaults
+silently when no `config.toml` is mounted.  The first line in
+`docker compose logs relay` should be the structured tracing-prefixed
+`Starting up from main` info line — there is no preceding "Error reading
+config file" warning.
+
+A healthy boot looks like this:
+
+```
+infer-relay  | [ts]  INFO nostr_rs_relay: Starting up from main
+infer-relay  | [ts]  INFO nostr_rs_relay::server: listening on: 0.0.0.0:8080
+infer-relay  | [ts]  INFO nostr_rs_relay::repo::sqlite: Built a connection pool "writer" (min=0, max=2)
+infer-relay  | [ts]  INFO nostr_rs_relay::repo::sqlite: Built a connection pool "maintenance" (min=0, max=2)
+infer-relay  | [ts]  INFO nostr_rs_relay::repo::sqlite: Built a connection pool "reader" (min=4, max=8)
+infer-relay  | [ts]  INFO nostr_rs_relay::repo::sqlite_migration: DB version = 18
+```
+
+If you see `Error reading config file` on boot, it means a `config.toml`
+is mounted but failed to parse (typically a syntax error or unknown TOML
+key).  The relay will still start using defaults, but your custom
+configuration is not being applied.  See the [Troubleshooting](#troubleshooting)
+section below for how to fix it.
+
+A real parse error (e.g. a typo in `config.toml`) prints exactly one
+softer line:
+
+```
+Warning: could not parse config.toml (...); using built-in defaults.
+```
+
+This is informational — the relay still functions correctly.  See the
+[Custom `config.toml`](#custom-configtoml) section for how to mount a real
+one.
+
 ## Healthcheck
 
 The healthcheck probes `http://127.0.0.1:8080/metrics` — a plain-text
@@ -193,6 +229,25 @@ Or stop the conflicting container:
 $ docker stop nostr-relay   # or whatever the container is named
 $ docker compose up -d
 ```
+
+### Seeing "Error reading config file" on boot
+
+If you see this line in `docker compose logs relay`, it means a
+`config.toml` exists in the container's working directory but could not
+be parsed (typically a syntax error or unknown TOML key).  The relay
+will still start using defaults, but your custom configuration is not
+being applied.
+
+Fix the file or remove it from the bind mount:
+
+```console
+$ docker compose exec relay ls -la /usr/src/app/config.toml
+$ docker compose exec relay cat /usr/src/app/config.toml    # inspect
+$ docker compose restart relay
+```
+
+If you deliberately want to run with defaults, simply remove the bind
+mount from `docker-compose.yml`.
 
 ## Out of Scope
 
