@@ -1,0 +1,53 @@
+# Required for build — DO NOT EXCLUDE:
+#   Cargo.toml, Cargo.lock, src/, proto/, build.rs
+#   .cargo/config.toml  (sets --cfg tokio_unstable, consumed by src/main.rs)
+
+# Cargo build artifacts (rebuilt inside container)
+target/
+
+# Local agent state
+.vibe/
+
+# Local SQLite database + WAL/SHM siblings (operators use named volume at runtime)
+nostr.db
+nostr.db-shm
+nostr.db-wal
+
+# Local logs
+*.log
+
+# Compose self-reference (avoid recursive build context when compose v2 is in-tree)
+docker-compose.yml
+docker-compose.yaml
+compose.yml
+compose.yaml
+
+# VCS metadata
+.git/
+.gitignore
+
+# CI configuration
+.github/
+
+# Nix flake (alternative build path)
+flake.nix
+flake.lock
+
+# Editor / OS junk
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Not needed for build (Dockerfile only consumes src/, proto/, build.rs, Cargo.toml/lock, .cargo/)
+docs/
+tests/
+examples/
+README.md
+config.toml
+LICENSE
+LICENSE-*
+contrib/
+.pre-commit-config.yaml
+.build.yml
+rustfmt.toml
