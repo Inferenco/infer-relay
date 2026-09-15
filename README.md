@@ -140,14 +140,34 @@ be mounted into a docker container like so:
 
 ```console
 $ docker run -it -p 7000:8080 \
-  --mount src=$(pwd)/config.toml,target=/usr/src/app/config.toml,type=bind \
+  --mount src=$(pwd)/config.toml,target=/usr/src/app/config.toml,type=bind,ro \
   --mount src=$(pwd)/data,target=/usr/src/app/db,type=bind \
-  --mount src=$(pwd)/index.html,target=/usr/src/app/index.html,type=bind \
   nostr-rs-relay
 ```
 
+> ⚠️ The `index.html` mount from older examples has been removed — the
+> Dockerfile does not `COPY` that file. Prefer `docker compose up` (see
+> [Docker](docs/docker.md)) for a working setup.
+
 Options include rate-limiting, event size limits, and network address
 settings.
+
+### Docker Compose
+
+A self-contained `docker-compose.yml` is provided at the repo root. It
+builds the image from the local `Dockerfile`, publishes port `8080`,
+persists the SQLite database in a named volume, and tails logs to
+stdout:
+
+```console
+$ docker compose up -d
+$ docker compose logs -f relay
+$ docker compose ps            # status should be "healthy"
+```
+
+Stop and wipe data with `docker compose down -v`. Override the tracing
+filter with `RUST_LOG=debug docker compose up`. See the top of
+`docker-compose.yml` for all options.
 
 ## Reverse Proxy Configuration
 

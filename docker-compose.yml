@@ -1,0 +1,67 @@
+# docker-compose.yml for Infer Relay (nostr-rs-relay fork)
+#
+# Run:        docker compose up -d
+# Tail logs:  docker compose logs -f relay
+# Status:     docker compose ps   (look for "healthy")
+# Stop:       docker compose down
+# Wipe data:  docker compose down -v
+#
+# The relay logs to stdout (tracing-subscriber fmt subscriber) and honors
+# the RUST_LOG env var. Override at runtime, e.g.:
+#     RUST_LOG=debug,nostr_rs_relay=trace docker compose up
+
+name: infer-relay
+
+services:
+  relay:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: infer-relay:local
+    container_name: infer-relay
+    restart: unless-stopped
+    init: true
+
+    ports:
+      # Maps container :8080 to host :8080. To change the host port (e.g.
+      # because you have a custom config.toml with port = 4000), edit the
+      # left-hand side: "4000:8080". The right-hand side must match the
+      # port the relay binds inside the container.
+      - "4000:4000"
+
+    environment:
+      # Tracing-subscriber filter; the Dockerfile already defaults to
+      # `info,nostr_rs_relay=info`. Override with RUST_LOG=... at runtime.
+      - RUST_LOG=${RUST_LOG:-info,nostr_rs_relay=info}
+      # TZ matters for log timestamps; keep UTC by default.
+      - TZ=${TZ:-Etc/UTC}
+
+    volumes:
+      # Named volume keeps SQLite + WAL/SHM siblings together across
+      # container restarts. Docker manages the directory; no host chown
+      # needed.
+      #
+      # For easy host-side inspection / backup, swap to a bind mount:
+      - ./data:/usr/src/app/db
+      # and `mkdir -p ./data` before `docker compose up`.
+      - ./config.toml:/usr/src/app/config.toml:ro
+      - relay-data:/usr/src/app/db
+
+    healthcheck:
+      # /metrics is the most stable endpoint — always 200 OK with a
+      # text/plain Prometheus body, no redirect, no auth.
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error",
+             "--max-time", "3", "http://127.0.0.1:4000/metrics"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s   # SQLite migration + listener bind on first boot
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  relay-data:

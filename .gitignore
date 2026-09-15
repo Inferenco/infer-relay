@@ -1,6 +1,10 @@
 **/target/
+.vibe
 nostr.db
 nostr.db-*
 justfile
 result
 **/.idea/
+.test-evidence/
+data
+*.log
