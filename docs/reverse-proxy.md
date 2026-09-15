@@ -9,9 +9,9 @@ for `haproxy`, `nginx` and `traefik` configurations are documented here.
 Assumptions:
 
 * HAProxy version is `2.4.10` or greater (older versions not tested).
-* Hostname for the relay is `relay.example.com`.
-* Your relay should be available over wss://relay.example.com
-* Your (NIP-11) relay info page should be available on https://relay.example.com
+* Hostname for the relay is `your-domain.example`.
+* Your relay should be available over wss://your-domain.example
+* Your (NIP-11) relay info page should be available on https://your-domain.example
 * SSL certificate is located in `/etc/certs/example.com.pem`.
 * Relay is running on port 8080.
 * Limit connections to 400 concurrent.
@@ -29,7 +29,7 @@ frontend fe_prod
     bind    :80
     http-request set-header X-Forwarded-Proto https if { ssl_fc }
     redirect scheme https code 301 if !{ ssl_fc }
-    acl host_relay hdr(host) -i -m beg relay.example.com
+    acl host_relay hdr(host) -i -m beg your-domain.example
     use_backend relay if host_relay
     # HSTS (1 year)
     http-response set-header Strict-Transport-Security max-age=31536000
@@ -56,47 +56,63 @@ disable HTTP/2 (`h2`), or upgrade HAProxy.
 
 Assumptions:
 
-* `Nginx` version is `1.18.0` (other versions not tested).
-* Hostname for the relay is `relay.example.com`.
-* SSL certificate and key are located at `/etc/letsencrypt/live/relay.example.com/`.
-* Relay is running on port `8080`.
+* `Nginx` version is `1.18.0` or newer (tested on 1.18, 1.22, 1.24).
+* Hostname for the relay is `your-domain.example` (substitute your actual domain).
+* SSL certificate and key are located at `/etc/letsencrypt/live/your-domain.example/`.
+* Relay is running on port `4000` (set via `[network] port = 4000` in `config.toml`).
+* For a full end-to-end production deployment (DNS, certbot, hardening), see
+  [Production Deployment with nginx + certbot](docker-production.md).
 
 ```
 http {
+    # WebSocket upgrade helper (required for HTTP/1.1 -> WS upgrade on /).
+    # `map` is only valid inside the `http` context.
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
     server {
         listen 443 ssl;
-        server_name relay.example.com;
-        ssl_certificate /etc/letsencrypt/live/relay.example.com/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/relay.example.com/privkey.pem;
-        ssl_protocols TLSv1.3 TLSv1.2;
-        ssl_prefer_server_ciphers on;
-        ssl_ecdh_curve secp521r1:secp384r1;
-        ssl_ciphers EECDH+AESGCM:EECDH+AES256;
+        listen [::]:443 ssl;
+        # Optional; the `http2` directive requires nginx >= 1.25.1.
+        # http2 on;
+        server_name your-domain.example;
 
-        # Optional Diffie-Helmann parameters
-        # Generate with openssl dhparam -out /etc/ssl/certs/dhparam.pem 4096
-        #ssl_dhparam /etc/ssl/certs/dhparam.pem;
+        ssl_certificate     /etc/letsencrypt/live/your-domain.example/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/your-domain.example/privkey.pem;
+        ssl_protocols       TLSv1.2 TLSv1.3;
+        ssl_prefer_server_ciphers off;
+        ssl_ciphers         ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
 
-        ssl_session_cache shared:TLS:2m;
-        ssl_buffer_size 4k;
-
-        # OCSP stapling
-        ssl_stapling on;
+        ssl_session_cache   shared:SSL:10m;
+        ssl_session_timeout 1d;
+        ssl_session_tickets off;
+        ssl_stapling        on;
         ssl_stapling_verify on;
-        resolver 1.1.1.1 1.0.0.1 [2606:4700:4700::1111] [2606:4700:4700::1001]; # Cloudflare
 
-        # Set HSTS to 365 days
-        add_header Strict-Transport-Security 'max-age=31536000; includeSubDomains; preload' always;
-        keepalive_timeout 70;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+        add_header X-Frame-Options           "DENY"              always;
+        add_header X-Content-Type-Options    "nosniff"           always;
+        add_header Referrer-Policy           "no-referrer"       always;
+        server_tokens off;
 
         location / {
-            proxy_pass http://localhost:8080;
+            proxy_pass http://127.0.0.1:4000;
             proxy_http_version 1.1;
-            proxy_read_timeout 1d;
-            proxy_send_timeout 1d;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "Upgrade";
-            proxy_set_header Host $host;
+            proxy_set_header Upgrade    $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Host              $host;
+            proxy_set_header X-Real-IP         $remote_addr;
+            proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            proxy_read_timeout    3600s;
+            proxy_send_timeout    3600s;
+            proxy_connect_timeout 5s;
+            proxy_buffering          off;
+            proxy_request_buffering  off;
+            tcp_nodelay on;
         }
     }
 }
@@ -119,7 +135,7 @@ Assumptions:
 * `Traefik` is used for provisioning of Let's Encrypt certificates.
 * `Traefik` is running in `Docker`, using `docker compose` and labels for the static configuration. An equivalent setup using a Traefik config file is possible too (but not covered here).
 * Strict Transport Security is enabled.
-* Hostname for the relay is `relay.example.com`, email address for ACME certificates provider is `name@example.com`.
+* Hostname for the relay is `your-domain.example`, email address for ACME certificates provider is `name@example.com`.
 * ipv6 is enabled, a viable private ipv6 subnet is specified in the example below.
 * Relay is running on port `8080`.
 
@@ -182,7 +198,7 @@ services:
    labels:
      - "traefik.enable=true"
      - "traefik.http.routers.nostr.entrypoints=https"
-     - "traefik.http.routers.nostr.rule=Host(`relay.example.com`)"
+     - "traefik.http.routers.nostr.rule=Host(`your-domain.example`)"
      - "traefik.http.routers.nostr.tls.certresolver=http"
      - "traefik.http.routers.nostr.service=nostr"
      - "traefik.http.services.nostr.loadbalancer.server.port=8080"
@@ -197,3 +213,9 @@ services:
 ### Traefik Notes
 
 Traefik will take care of the provisioning and renewal of certificates. In case of an ipv4-only relay, simply detele the `enable_ipv6:` and `ipam:` entries in the `networks:` section of the docker-compose file.
+
+## See also
+
+* [Production Deployment with nginx + certbot](docker-production.md) — full
+  step-by-step guide for a single-host production deployment with nginx on
+  the host, Let's Encrypt via certbot, and Docker Compose for the relay.
