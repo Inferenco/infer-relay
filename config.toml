@@ -2,7 +2,7 @@
 
 [info]
 # The advertised URL for the Nostr websocket.
-relay_url = "wss://nostr.example.com/"
+relay_url = "wss://nostr.inferenco.com/"
 
 # Relay information for clients.  Put your unique server name here.
 name = "nostr-rs-relay"
@@ -88,7 +88,7 @@ description = "A newly created nostr-rs-relay.\n\nCustomize this with your own i
 address = "0.0.0.0"
 
 # Listen on this port
-port = 8080
+port = 4000
 
 # If present, read this HTTP header for logging client IP addresses.
 # Examples for common proxies, cloudflare:
