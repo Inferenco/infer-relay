@@ -23,11 +23,11 @@ for TLS termination.
 - [x] NIP-20: [Command Results](https://github.com/nostr-protocol/nips/blob/master/20.md)
 - [x] NIP-22: [Event `created_at` limits](https://github.com/nostr-protocol/nips/blob/master/22.md) (_future-dated events only_)
 - [ ] NIP-26: [Event Delegation](https://github.com/nostr-protocol/nips/blob/master/26.md) (_implemented, but currently disabled_)
-- [x] NIP-28: [Public Chat](https://github.com/nostr-protocol/nips/blob/master/28.md)
+- [ ] NIP-28: [Public Chat](https://github.com/nostr-protocol/nips/blob/master/28.md)
 - [x] NIP-33: [Parameterized Replaceable Events](https://github.com/nostr-protocol/nips/blob/master/33.md)
 - [x] NIP-40: [Expiration Timestamp](https://github.com/nostr-protocol/nips/blob/master/40.md)
 - [x] NIP-42: [Authentication of clients to relays](https://github.com/nostr-protocol/nips/blob/master/42.md)
-- [x] NIP-91: [AND operator for filters](https://github.com/nostr-protocol/nips/pull/1365)
+- [ ] NIP-91: [AND operator for filters](https://github.com/nostr-protocol/nips/pull/1365)
 
 ## Quick Start
 
