@@ -8,3 +8,4 @@ result
 .test-evidence/
 data
 *.log
+config.toml
