@@ -11,7 +11,7 @@ and reduce spam and abuse.
 This will likely evolve substantially, the first goal is to get a
 basic one-way service that lets an externalized program decide on
 event persistence.  This does not represent the final state of gRPC
-extensibility in `nostr-rs-relay`.
+extensibility in `Infer Relay`.
 
 ## Considerations
 

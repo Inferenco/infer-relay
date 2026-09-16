@@ -126,7 +126,7 @@ SQLite database in a named volume. For details, see
 $ curl -s http://127.0.0.1:4000/ -H 'Accept: application/nostr+json' | jq .
 {
   "id": "wss://your-domain.example/",
-  "name": "nostr-rs-relay",
+  "name": "Infer Relay",
   "supported_nips": [1, 2, 9, 11, 12, 15, 16, 20, 22, 33, 40],
   ...
 }
@@ -408,7 +408,7 @@ on the host and certbot on the host. The following are documented
 elsewhere:
 
 - **Traefik or HAProxy** instead of nginx — see [Reverse Proxy](reverse-proxy.md)
-- **Systemd unit** (no Docker) — see `contrib/nostr-rs-relay.service` and
+- **Systemd unit** (no Docker) — see `contrib/infer-relay.service` and
   [Running as a Linux system process](run-as-linux-system-process.md)
 - **PostgreSQL backend** — see `config.toml` `[database]` and
   [Database Maintenance](database-maintenance.md)

@@ -1,0 +1,14 @@
+[Unit]
+Description=Infer Relay
+
+[Service]
+User=REPLACE_WITH_YOUR_USERNAME
+WorkingDirectory=/var/lib/infer-relay
+Environment=RUST_LOG=warn,infer_relay=info
+ExecStart=/usr/local/bin/infer-relay --config /etc/infer-relay/config.toml
+TimeoutStopSec=10
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

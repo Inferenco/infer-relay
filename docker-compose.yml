@@ -1,4 +1,4 @@
-# docker-compose.yml for Infer Relay (nostr-rs-relay fork)
+# docker-compose.yml for Infer Relay
 #
 # Run:        docker compose up -d
 # Tail logs:  docker compose logs -f relay
@@ -8,7 +8,7 @@
 #
 # The relay logs to stdout (tracing-subscriber fmt subscriber) and honors
 # the RUST_LOG env var. Override at runtime, e.g.:
-#     RUST_LOG=debug,nostr_rs_relay=trace docker compose up
+#     RUST_LOG=debug,infer_relay=trace docker compose up
 
 name: infer-relay
 
@@ -31,8 +31,8 @@ services:
 
     environment:
       # Tracing-subscriber filter; the Dockerfile already defaults to
-      # `info,nostr_rs_relay=info`. Override with RUST_LOG=... at runtime.
-      - RUST_LOG=${RUST_LOG:-info,nostr_rs_relay=info}
+      # `info,infer_relay=info`. Override with RUST_LOG=... at runtime.
+      - RUST_LOG=${RUST_LOG:-info,infer_relay=info}
       # TZ matters for log timestamps; keep UTC by default.
       - TZ=${TZ:-Etc/UTC}
 

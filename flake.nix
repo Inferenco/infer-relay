@@ -47,7 +47,7 @@
           ;
         };
         crate = craneLib.buildPackage {
-          name = "nostr-rs-relay";
+          name = "infer-relay";
           inherit src;
           nativeBuildInputs = [ 
             pkgs.pkg-config 

@@ -1,6 +1,6 @@
 # Database Maintenance
 
-`nostr-rs-relay` uses the SQLite embedded database to minimize
+`Infer Relay` uses the SQLite embedded database to minimize
 dependencies and overall footprint of running a relay.  If traffic is
 light, the relay should just run with very little need for
 intervention.  For heavily trafficked relays, there are a number of

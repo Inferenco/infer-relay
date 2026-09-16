@@ -1,9 +1,9 @@
 //! Server process
 use clap::Parser;
 use console_subscriber::ConsoleLayer;
-use nostr_rs_relay::cli::CLIArgs;
-use nostr_rs_relay::config;
-use nostr_rs_relay::server::start_server;
+use infer_relay::cli::CLIArgs;
+use infer_relay::config;
+use infer_relay::server::start_server;
 use std::fs;
 use std::path::Path;
 use std::process;

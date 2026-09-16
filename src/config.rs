@@ -305,7 +305,7 @@ impl Default for Settings {
         Settings {
             info: Info {
                 relay_url: None,
-                name: Some("Unnamed nostr-rs-relay".to_owned()),
+                name: Some("Infer Relay".to_owned()),
                 description: None,
                 pubkey: None,
                 contact: None,

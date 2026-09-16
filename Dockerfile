@@ -4,8 +4,8 @@ RUN apt-get update \
     && apt-get install -y cmake protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
 RUN USER=root cargo install cargo-auditable
-RUN USER=root cargo new --bin nostr-rs-relay
-WORKDIR ./nostr-rs-relay
+RUN USER=root cargo new --bin infer-relay
+WORKDIR ./infer-relay
 COPY ./Cargo.toml ./Cargo.toml
 COPY ./Cargo.lock ./Cargo.lock
 # build dependencies only (caching)
@@ -19,7 +19,7 @@ COPY ./proto ./proto
 COPY ./build.rs ./build.rs
 
 # build auditable release using locked deps
-RUN rm ./target/release/deps/nostr*relay*
+RUN rm ./target/release/deps/infer*relay*
 RUN cargo auditable build --release --locked
 
 FROM docker.io/library/debian:bookworm-slim
@@ -40,14 +40,14 @@ RUN groupadd $APP_USER \
     && mkdir -p ${APP} \
     && mkdir -p ${APP_DATA}
 
-COPY --from=builder /nostr-rs-relay/target/release/nostr-rs-relay ${APP}/nostr-rs-relay
+COPY --from=builder /infer-relay/target/release/infer-relay ${APP}/infer-relay
 
 RUN chown -R $APP_USER:$APP_USER ${APP}
 
 USER $APP_USER
 WORKDIR ${APP}
 
-ENV RUST_LOG=info,nostr_rs_relay=info
+ENV RUST_LOG=info,infer_relay=info
 ENV APP_DATA=${APP_DATA}
 
-CMD ./nostr-rs-relay --db ${APP_DATA}
+CMD ./infer-relay --db ${APP_DATA}
