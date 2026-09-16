@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
-use nostr_rs_relay::config;
-use nostr_rs_relay::server::start_server;
+use infer_relay::config;
+use infer_relay::server::start_server;
 //use http::{Request, Response};
 use hyper::{Client, StatusCode, Uri};
 use std::net::TcpListener;

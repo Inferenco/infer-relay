@@ -1,0 +1,212 @@
+# Infer Relay — example configuration
+# ---------------------------------------------------------------
+# Copy this file to `config.toml` (the relay's gitignored local
+# config) and edit values for your deployment. Every section below
+# is optional; the relay uses built-in defaults for anything you omit.
+#
+# All placeholders below are illustrative only:
+#   - Domain:  your-domain.example  (RFC 6761 reserved, safe to commit)
+#   - Pubkey:  <administrator-nostr-pubkey-hex>  (32-byte hex, NOT npub)
+#   - Contact: <administrator-contact-uri>
+#   - NIP-05 domains: <your-nip05-domain.example>
+#   - LNbits: <lnbits-api-key>   CLN rune: <cln-rune-path>
+#   - Node URL: <node-url>        Nsec: <nostr-nsec>
+#
+# Never commit a real config.toml — it is in .gitignore.
+
+[info]
+# Public WebSocket URL clients connect to. MUST be wss:// in production.
+relay_url = "wss://your-domain.example/"
+
+# Display name shown in NIP-11 relay info.
+name = "Infer Relay"
+
+# Description shown in NIP-11 relay info. Newlines are preserved.
+description = "An Infer Relay instance.\n\nCustomize this with your own info."
+
+# Administrative contact pubkey (32-byte hex, not npub). Public — do not
+# use a secret key here.
+#pubkey = "<administrator-nostr-pubkey-hex>"
+
+# Administrative contact URI (mailto:, nostr:, https://…).
+#contact = "<administrator-contact-uri>"
+
+# Favicon file, relative to the relay's working directory. ICO format.
+#favicon = "favicon.ico"
+
+# Absolute URL of the relay's icon (any image format).
+#relay_icon = "https://your-domain.example/icon.png"
+
+# Path to a custom relay landing page, relative to the working directory.
+#relay_page = "index.html"
+
+[diagnostics]
+# Enable `tokio-console` tracing. Requires the console-subscriber feature.
+# Leave false for normal operation.
+#tracing = false
+
+[database]
+# Backend engine: "sqlite" (default) or "postgres" (experimental).
+#engine = "sqlite"
+
+# Directory for SQLite files. Default: current directory.
+# Can also be overridden with the --db CLI flag.
+#data_directory = "."
+
+# Use an in-memory SQLite database (no persistence across restarts).
+#in_memory = false
+
+# SQLite reader connection pool sizing.
+min_conn = 4
+max_conn = 8
+
+# Postgres connection (only used when engine = "postgres").
+#connection = "postgresql://user:password@localhost:7500/nostr"
+# Optional separate write node for HA Postgres setups.
+#connection_write = "postgresql://user:password@localhost:7500/nostr"
+
+[logging]
+# Optional: write logs to a rotating file instead of stdout.
+#folder_path = "./log"
+#file_prefix = "infer-relay"
+
+[grpc]
+# Optional gRPC authorization server (nauthz). When unreachable, the
+# relay fails OPEN (events still admitted). See docs/grpc-extensions.md.
+#event_admission_server = "http://127.0.0.1:50051"
+
+# Reflect the gRPC admission check in NIP-11 (`limitation.restricted_writes`).
+#restricts_write = false
+
+[network]
+# Bind address. Default: 0.0.0.0 (all interfaces).
+#address = "0.0.0.0"
+
+# Listen port. Default: 8080 inside the container; map via compose.
+#port = 8080
+
+# If behind a reverse proxy, set this to extract the real client IP.
+#remote_ip_header = "x-forwarded-for"
+#remote_ip_header = "cf-connecting-ip"
+
+# WebSocket ping interval in seconds. Default: 300 (5 minutes).
+#ping_interval = 300
+
+[options]
+# Reject events whose `created_at` is more than this many seconds in
+# future. 1800 = 30 minutes. Set to 0 to allow any future timestamp.
+reject_future_seconds = 1800
+
+[limits]
+# Per-server event ingestion rate (avg over 1 minute). 0 = unlimited.
+# Set this for any public relay to prevent abuse.
+#messages_per_sec = 5
+
+# Per-server subscription creation rate (avg over 1 minute). 0 = unlimited.
+# Strongly recommend a small value (e.g. 10) for public relays.
+#subscriptions_per_min = 10
+
+# Max concurrent DB connections per client (UNIMPLEMENTED — do not set).
+#db_conns_per_client = 0
+
+# Max blocking threads for DB calls. Default: 16.
+#max_blocking_threads = 16
+
+# Max size of a single EVENT message in bytes. Default: 128 KiB. 0 = unlimited.
+#max_event_bytes = 131072
+
+# Max WebSocket message / frame size in bytes. Default: 128 KiB.
+#max_ws_message_bytes = 131072
+#max_ws_frame_bytes = 131072
+
+# Broadcast buffer (slow-consumer backpressure) and persistence buffer
+# (sender backpressure) in number of events. Defaults shown.
+#broadcast_buffer = 16384
+#event_persist_buffer = 4096
+
+# Event kind filter: blacklist or allowlist. Leave both commented to
+# accept every kind.
+#event_kind_blacklist = [70202]
+#event_kind_allowlist = [0, 1, 2, 3, 7, 40, 41, 42, 43, 44, 30023]
+
+# Reject imprecise REQ filters (kind-only / author-only / etc.) to
+# encourage outbox-model adoption. Recommended for public relays.
+limit_scrapers = false
+
+[authorization]
+# Pubkey allowlist. When set, only events signed by these 32-byte hex
+# pubkeys are persisted. Leave commented out to allow any author.
+#pubkey_whitelist = [
+#  "<administrator-nostr-pubkey-hex>",
+#]
+
+# Require NIP-42 client authentication before accepting writes.
+#nip42_auth = false
+
+# When nip42_auth is true, restrict DMs (kind 4/44) and gift wraps
+# (kind 1059) to their authenticated recipient.
+#nip42_dms = false
+
+[verified_users]
+# NIP-05 verification mode:
+#   "disabled"  — never check.
+#   "passive"   — check but never block.
+#   "enabled"   — require a valid NIP-05 to publish.
+#mode = "disabled"
+
+# Optional NIP-05 domain allowlist / blacklist. Applied AFTER mode.
+#domain_whitelist = ["<your-nip05-domain.example>"]
+#domain_blacklist = ["spam.example"]
+
+# Treat a pubkey as "verified" if a successful NIP-05 check happened
+# within this window.
+#verify_expiration = "1 week"
+
+# Minimum interval between re-verification attempts for one pubkey.
+#verify_update_frequency = "24 hours"
+
+# Give up on a pubkey after this many consecutive failures.
+#max_consecutive_failures = 20
+
+[pay_to_relay]
+# Enable Lightning-paid admission. See docs/pay-to-relay.md.
+#enabled = false
+
+# Payment processor backend.
+#processor = "ClnRest/LNBits"
+
+# Admission cost in sats (one-time, on signup). 0 = free admission.
+#admission_cost = 4200
+
+# Cost in sats per published event. 0 = free publishing.
+#cost_per_event = 0
+
+# LNbits / CLN node URL.
+#node_url = "<node-url>"
+
+# LNbits invoice/read API key.
+#api_secret = "<lnbits-api-key>"
+
+# Path to a Core Lightning rune file (alternative to api_secret).
+#rune_path = "<cln-rune-path>"
+
+# Send a DM to new paying users with welcome / onboarding text.
+#direct_message = false
+
+# Terms of service shown on the join page. Triple-quoted string preserves
+# newlines.
+#terms_message = """
+#This service is provided "as is", without warranty of any kind.
+#
+#By using this service you agree:
+#* Not to engage in spam or abuse
+#* Not to disseminate illegal content
+#* To use the service in compliance with applicable laws
+#"""
+
+# Allow new paying users to register. When false, only pre-seeded
+# whitelisted pubkeys can join.
+#sign_ups = false
+
+# nsec used to DM new paying users (required when direct_message = true).
+#secret_key = "<nostr-nsec>"

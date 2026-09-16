@@ -90,7 +90,7 @@ The relay logs to **stdout** via `tracing-subscriber` (fmt subscriber).
 Override the filter at runtime with `RUST_LOG`:
 
 ```console
-$ RUST_LOG=debug,nostr_rs_relay=trace docker compose up
+$ RUST_LOG=debug,infer_relay=trace docker compose up
 ```
 
 Common filters:
@@ -99,7 +99,7 @@ Common filters:
 |---|---|
 | `RUST_LOG=info` | Default — startup, connection, and error messages only |
 | `RUST_LOG=debug` | Per-connection logging (expensive) |
-| `RUST_LOG=warn,nostr_rs_relay=info` | Suppress relay chatter, keep startup |
+| `RUST_LOG=warn,infer_relay=info` | Suppress relay chatter, keep startup |
 
 Tail recent logs:
 
@@ -118,12 +118,12 @@ config file" warning.
 A healthy boot looks like this:
 
 ```
-infer-relay  | [ts]  INFO nostr_rs_relay: Starting up from main
-infer-relay  | [ts]  INFO nostr_rs_relay::server: listening on: 0.0.0.0:8080
-infer-relay  | [ts]  INFO nostr_rs_relay::repo::sqlite: Built a connection pool "writer" (min=0, max=2)
-infer-relay  | [ts]  INFO nostr_rs_relay::repo::sqlite: Built a connection pool "maintenance" (min=0, max=2)
-infer-relay  | [ts]  INFO nostr_rs_relay::repo::sqlite: Built a connection pool "reader" (min=4, max=8)
-infer-relay  | [ts]  INFO nostr_rs_relay::repo::sqlite_migration: DB version = 18
+infer-relay  | [ts]  INFO infer_relay: Starting up from main
+infer-relay  | [ts]  INFO infer_relay::server: listening on: 0.0.0.0:8080
+infer-relay  | [ts]  INFO infer_relay::repo::sqlite: Built a connection pool "writer" (min=0, max=2)
+infer-relay  | [ts]  INFO infer_relay::repo::sqlite: Built a connection pool "maintenance" (min=0, max=2)
+infer-relay  | [ts]  INFO infer_relay::repo::sqlite: Built a connection pool "reader" (min=4, max=8)
+infer-relay  | [ts]  INFO infer_relay::repo::sqlite_migration: DB version = 18
 ```
 
 If you see `Error reading config file` on boot, it means a `config.toml`

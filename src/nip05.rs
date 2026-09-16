@@ -213,7 +213,7 @@ impl Verifier {
             .header(
                 "User-Agent",
                 format!(
-                    "nostr-rs-relay/{} NIP-05 Verifier",
+                    "infer-relay/{} NIP-05 Verifier",
                     crate::info::CARGO_PKG_VERSION.unwrap()
                 ),
             )

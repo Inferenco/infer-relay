@@ -1,27 +1,17 @@
-# [nostr-rs-relay](https://git.sr.ht/~gheartsfield/nostr-rs-relay)
+# Infer Relay
 
-This is a [nostr](https://github.com/nostr-protocol/nostr) relay,
-written in Rust.  It currently supports the entire relay protocol, and
-persists data with SQLite.  There is experimental support for
-Postgresql.
+Infer Relay is a [Nostr](https://github.com/nostr-protocol/nostr) relay server
+written in Rust. It implements the full Nostr relay protocol, persists data to
+SQLite, and is designed to be deployed standalone or behind a reverse proxy
+for TLS termination.
 
-The project master repository is available on
-[sourcehut](https://sr.ht/~gheartsfield/nostr-rs-relay/), and is
-mirrored on [GitHub](https://github.com/scsibug/nostr-rs-relay).
-
-[![builds.sr.ht status](https://builds.sr.ht/~gheartsfield/nostr-rs-relay/commits/master.svg)](https://builds.sr.ht/~gheartsfield/nostr-rs-relay/commits/master?)
-
-![Github CI](https://github.com/scsibug/nostr-rs-relay/actions/workflows/ci.yml/badge.svg)
-
+[![CI](https://github.com/Inferenco/infer-relay/actions/workflows/ci.yml/badge.svg)](https://github.com/Inferenco/infer-relay/actions/workflows/ci.yml)
 
 ## Features
 
-[NIPs](https://github.com/nostr-protocol/nips) with a relay-specific implementation are listed here.
+[NIPs](https://github.com/nostr-protocol/nips) with a relay-specific implementation:
 
 - [x] NIP-01: [Basic protocol flow description](https://github.com/nostr-protocol/nips/blob/master/01.md)
-  * Core event model
-  * Hide old metadata events
-  * Id/Author prefix search
 - [x] NIP-02: [Contact List and Petnames](https://github.com/nostr-protocol/nips/blob/master/02.md)
 - [ ] NIP-03: [OpenTimestamps Attestations for Events](https://github.com/nostr-protocol/nips/blob/master/03.md)
 - [x] NIP-05: [Mapping Nostr keys to DNS-based internet identifiers](https://github.com/nostr-protocol/nips/blob/master/05.md)
@@ -41,150 +31,112 @@ mirrored on [GitHub](https://github.com/scsibug/nostr-rs-relay).
 
 ## Quick Start
 
-The provided `Dockerfile` will compile and build the server
-application.  Use a bind mount to store the SQLite database outside of
-the container image, and map the container's 8080 port to a host port
-(7000 in the example below).
-
-The examples below start a rootless podman container, mapping a local
-data directory and config file.
-
 ```console
-$ podman build --pull -t nostr-rs-relay .
-
-$ mkdir data
-
-$ podman unshare chown 100:100 data
-
-$ podman run -it --rm -p 7000:8080 \
-  --user=100:100 \
-  -v $(pwd)/data:/usr/src/app/db:Z \
-  -v $(pwd)/config.toml:/usr/src/app/config.toml:ro,Z \
-  --name nostr-relay nostr-rs-relay:latest
-
-Nov 19 15:31:15.013  INFO nostr_rs_relay: Starting up from main
-Nov 19 15:31:15.017  INFO nostr_rs_relay::server: listening on: 0.0.0.0:8080
-Nov 19 15:31:15.019  INFO nostr_rs_relay::server: db writer created
-Nov 19 15:31:15.019  INFO nostr_rs_relay::server: control message listener started
-Nov 19 15:31:15.019  INFO nostr_rs_relay::db: Built a connection pool "event writer" (min=1, max=4)
-Nov 19 15:31:15.019  INFO nostr_rs_relay::db: opened database "/usr/src/app/db/nostr.db" for writing
-Nov 19 15:31:15.019  INFO nostr_rs_relay::schema: DB version = 0
-Nov 19 15:31:15.054  INFO nostr_rs_relay::schema: database pragma/schema initialized to v7, and ready
-Nov 19 15:31:15.054  INFO nostr_rs_relay::schema: All migration scripts completed successfully.  Welcome to v7.
-Nov 19 15:31:15.521  INFO nostr_rs_relay::db: Built a connection pool "client query" (min=4, max=128)
+$ git clone https://github.com/Inferenco/infer-relay
+$ cd infer-relay
+$ cp config.toml.example config.toml
+$ docker compose up -d --build
+$ docker compose logs -f relay
 ```
 
-Use a `nostr` client such as
-[`noscl`](https://github.com/fiatjaf/noscl) to publish and query
-events.
-
-```console
-$ noscl publish "hello world"
-Sent to 'ws://localhost:8090'.
-Seen it on 'ws://localhost:8090'.
-$ noscl home
-Text Note [81cf...2652] from 296a...9b92 5 seconds ago
-  hello world
-```
-
-A pre-built container is also available on DockerHub:
-https://hub.docker.com/r/scsibug/nostr-rs-relay
+The relay is now listening on `ws://localhost:8080`. Connect with any Nostr
+client (e.g. [`noscl`](https://github.com/fiatjaf/noscl)).
 
 ## Build and Run (without Docker)
 
-Building `nostr-rs-relay` requires an installation of Cargo & Rust: https://www.rust-lang.org/tools/install
+Building `infer-relay` requires an installation of Cargo & Rust:
+https://www.rust-lang.org/tools/install
 
-The following OS packages will be helpful; on Debian/Ubuntu:
-```console
-$ sudo apt-get install build-essential cmake protobuf-compiler pkg-config libssl-dev
-```
-
-On OpenBSD:
-```console
-$ doas pkg_add rust protobuf
-```
-
-Clone this repository, and then build a release version of the relay:
+System packages (Debian/Ubuntu):
 
 ```console
-$ git clone -q https://git.sr.ht/\~gheartsfield/nostr-rs-relay
-$ cd nostr-rs-relay
-$ cargo build -q -r
+$ sudo apt-get install -y build-essential cmake protobuf-compiler pkg-config libssl-dev
 ```
 
-The relay executable is now located in
-`target/release/nostr-rs-relay`.  In order to run it with logging
-enabled, execute it with the `RUST_LOG` variable set:
+Clone and build:
 
 ```console
-$ RUST_LOG=warn,nostr_rs_relay=info ./target/release/nostr-rs-relay
-Dec 26 10:31:56.455  INFO nostr_rs_relay: Starting up from main
-Dec 26 10:31:56.464  INFO nostr_rs_relay::server: listening on: 0.0.0.0:8080
-Dec 26 10:31:56.466  INFO nostr_rs_relay::server: db writer created
-Dec 26 10:31:56.466  INFO nostr_rs_relay::db: Built a connection pool "event writer" (min=1, max=2)
-Dec 26 10:31:56.466  INFO nostr_rs_relay::db: opened database "./nostr.db" for writing
-Dec 26 10:31:56.466  INFO nostr_rs_relay::schema: DB version = 11
-Dec 26 10:31:56.467  INFO nostr_rs_relay::db: Built a connection pool "maintenance writer" (min=1, max=2)
-Dec 26 10:31:56.467  INFO nostr_rs_relay::server: control message listener started
-Dec 26 10:31:56.468  INFO nostr_rs_relay::db: Built a connection pool "client query" (min=4, max=8)
+$ git clone https://github.com/Inferenco/infer-relay
+$ cd infer-relay
+$ cargo build -r
 ```
 
-You now have a running relay, on port `8080`.  Use a `nostr` client or
-`websocat` to connect and send/query for events.
+The relay binary is at `target/release/infer-relay`. Run with logging:
+
+```console
+$ RUST_LOG=info,infer_relay=info ./target/release/infer-relay
+```
 
 ## Configuration
 
-The sample [`config.toml`](config.toml) file demonstrates the
-configuration available to the relay.  This file is optional, but may
-be mounted into a docker container like so:
+All settings live in `config.toml.example` at the repo root — copy it to
+`config.toml` (which is `.gitignore`'d) and edit. The file documents every
+section: `[info]`, `[diagnostics]`, `[database]`, `[logging]`, `[grpc]`,
+`[network]`, `[options]`, `[limits]`, `[authorization]`, `[verified_users]`,
+and `[pay_to_relay]`.
+
+For Docker, mount it into the container:
 
 ```console
-$ docker run -it -p 7000:8080 \
-  --mount src=$(pwd)/config.toml,target=/usr/src/app/config.toml,type=bind,ro \
-  --mount src=$(pwd)/data,target=/usr/src/app/db,type=bind \
-  nostr-rs-relay
+$ docker compose up -d --build
 ```
 
-> ⚠️ The `index.html` mount from older examples has been removed — the
-> Dockerfile does not `COPY` that file. Prefer `docker compose up` (see
-> [Docker](docs/docker.md)) for a working setup.
+The compose file already bind-mounts `./config.toml` and persists the SQLite
+database. See [Docker Deployment](docs/docker.md) for details.
 
-Options include rate-limiting, event size limits, and network address
-settings.
+## Deployment
 
-### Docker Compose
+- **Docker Compose** — see [Docker Deployment](docs/docker.md).
+- **Production hardening (nginx + certbot)** — see
+  [Production Deployment with nginx + certbot](docs/docker-production.md).
+- **Reverse proxy (HAProxy, nginx, Traefik)** — see
+  [Reverse Proxy Setup](docs/reverse-proxy.md).
+- **Systemd unit on a Linux host** — see
+  [Run as a Linux system process](docs/run-as-linux-system-process.md).
 
-A self-contained `docker-compose.yml` is provided at the repo root. It
-builds the image from the local `Dockerfile`, publishes port `8080`,
-persists the SQLite database in a named volume, and tails logs to
-stdout:
+## Docs
 
-```console
-$ docker compose up -d
-$ docker compose logs -f relay
-$ docker compose ps            # status should be "healthy"
-```
+Documentation lives in [`docs/`](docs/):
 
-Stop and wipe data with `docker compose down -v`. Override the tracing
-filter with `RUST_LOG=debug docker compose up`. See the top of
-`docker-compose.yml` for all options.
+**Deployment**
 
-## Reverse Proxy Configuration
+- [Docker Deployment](docs/docker.md) — quickstart with `docker compose`.
+- [Production Deployment with nginx + certbot](docs/docker-production.md) —
+  full guide for a single-host production deployment with TLS via Let's
+  Encrypt.
+- [Reverse Proxy Setup](docs/reverse-proxy.md) — HAProxy, nginx, and Traefik
+  examples for TLS termination.
 
-For examples of putting the relay behind a reverse proxy (for TLS
-termination, load balancing, and other features), see [Reverse
-Proxy](docs/reverse-proxy.md).
+**Operation**
 
-## Dev Channel
+- [Database Maintenance](docs/database-maintenance.md) — backing up,
+  vacuuming, and pruning the SQLite store.
+- [Run as a Linux system process](docs/run-as-linux-system-process.md) —
+  systemd unit, no Docker.
 
-For development discussions, please feel free to use the [sourcehut
-mailing list](https://lists.sr.ht/~gheartsfield/nostr-rs-relay-devel).
+**Features**
 
-License
----
+- [Pay to Relay](docs/pay-to-relay.md) — Lightning-paid admission and
+  per-event posting via LNbits / Core Lightning.
+- [Author Verification (NIP-05)](docs/user-verification-nip05.md) — design
+  document for NIP-05-based author gating.
+- [gRPC Extensions](docs/grpc-extensions.md) — design document for
+  externalized event-admission decisions (nauthz).
+
+## Community & Support
+
+Join the Inferenco Telegram channel for development discussions, support, and
+release announcements:
+
+**https://t.me/inferenco**
+
+## Contributing
+
+Bug reports, feature requests, and pull requests are welcome on the
+[GitHub issue tracker](https://github.com/Inferenco/infer-relay/issues).
+
+## License
+
 This project is MIT licensed.
 
-External Documentation and Links
----
-
-* [BlockChainCaffe's Nostr Relay Setup Guide](https://github.com/BlockChainCaffe/Nostr-Relay-Setup-Guide)
+Copyright © 2026 Inferenco.

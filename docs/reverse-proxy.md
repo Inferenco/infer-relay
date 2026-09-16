@@ -1,6 +1,6 @@
 # Reverse Proxy Setup Guide
 
-It is recommended to run `nostr-rs-relay` behind a reverse proxy such
+It is recommended to run `Infer Relay` behind a reverse proxy such
 as `haproxy`, `nginx` or `traefik` to provide TLS termination.  Simple examples
 for `haproxy`, `nginx` and `traefik` configurations are documented here.
 
@@ -186,7 +186,7 @@ services:
 
   # example nostr config. only labels: section is relevant for Traefik config
   nostr:
-   image: nostr-rs-relay:latest
+   image: infer-relay:latest
    container_name: nostr-relay
    networks:
      nostr:
